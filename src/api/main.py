@@ -126,11 +126,19 @@ def explain(patient: PatientRecord):
         # Filter to only top 5 most impactful features
         top_impacts = dict(sorted(impacts.items(), key=lambda x: abs(x[1]), reverse=True)[:5])
         
+                # Split factors into risk-increasing and risk-decreasing
+        risk_increasers = [k.replace("_", " ") for k, v in top_impacts.items() if v > 0]
+        risk_decreasers = [k.replace("_", " ") for k, v in top_impacts.items() if v < 0]
+
+        if risk_increasers:
+            summary = f"Top factors increasing risk: {', '.join(risk_increasers)}."
+        else:
+            summary = f"Top protective factors keeping risk low: {', '.join(risk_decreasers)}."
+
         return ExplanationResponse(
             risk_score=round(risk_prob, 4),
             top_risk_factors=top_impacts,
-            clinical_summary=f"Top drivers for {risk_prob:.1%} risk: " + 
-                             ", ".join([k for k, v in top_impacts.items() if v > 0])
+            clinical_summary=summary
         )
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
