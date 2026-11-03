@@ -1,0 +1,33 @@
+# Data - never commit raw or derived datasets
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# Models
+models/
+*.joblib
+*.pkl
+*.json.bak
+
+# Virtual env
+venv/
+.venv/
+
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.pytest_cache/
+
+# IDE
+.vscode/
+.idea/
+
+# Env secrets
+.env
+*.env
+
+# OS
+.DS_Store
+Thumbs.db
