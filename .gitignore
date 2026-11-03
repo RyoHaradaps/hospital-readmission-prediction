@@ -5,7 +5,7 @@ data/processed/*
 !data/processed/.gitkeep
 
 # Models
-models/
+/models/
 *.joblib
 *.pkl
 *.json.bak
