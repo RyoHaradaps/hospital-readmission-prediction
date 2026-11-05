@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.api.schemas import PatientRecord, PredictionResponse, ExplanationResponse
 from src.features.build_features import build_features
+from src.llm.summarizer import generate_clinical_summary
 
 MODELS_DIR = Path("models")
 MODEL_VERSION = "v0.1.0"
@@ -103,7 +104,7 @@ def predict(patient: PatientRecord):
             risk_score=round(risk_prob, 4),
             risk_tier=tier,
             model_version=MODEL_VERSION,
-            clinical_summary=f"Patient has a {risk_prob:.1%} risk of readmission. Risk Tier: {tier}."
+            clinical_summary=generate_clinical_summary(risk_prob, tier, {}, audience="physician")
         )
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -138,7 +139,7 @@ def explain(patient: PatientRecord):
         return ExplanationResponse(
             risk_score=round(risk_prob, 4),
             top_risk_factors=top_impacts,
-            clinical_summary=summary
+            clinical_summary=generate_clinical_summary(risk_prob, "Medium", top_impacts, audience="physician")
         )
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
