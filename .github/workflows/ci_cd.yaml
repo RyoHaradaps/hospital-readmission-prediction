@@ -27,5 +27,7 @@ jobs:
         pip install pytest httpx
 
     - name: Run basic tests
+      env:
+        PYTHONPATH: .
       run: |
         pytest tests/ -v
