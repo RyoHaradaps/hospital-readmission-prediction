@@ -16,22 +16,22 @@ MODELS_DIR = Path("models")
 MODEL_VERSION = "v0.1.0"
 
 # Global variables to hold our artifacts
-ml_models = {}
+app.ml_models = {}
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Load model and preprocessor on startup."""
     print("Loading artifacts …")
     try:
-        ml_models["preprocessor"] = joblib.load(MODELS_DIR / "preprocessor.joblib")
-        ml_models["model"] = joblib.load(MODELS_DIR / "model.joblib")
+        app.ml_models["preprocessor"] = joblib.load(MODELS_DIR / "preprocessor.joblib")
+        app.ml_models["model"] = joblib.load(MODELS_DIR / "model.joblib")
         # Initialize SHAP explainer (TreeExplainer is fast)
-        ml_models["explainer"] = shap.TreeExplainer(ml_models["model"])
+        app.ml_models["explainer"] = shap.TreeExplainer(app.ml_models["model"])
     except Exception as e:
         print(f"Error loading models: {e}")
         raise e
     yield
-    ml_models.clear()
+    app.ml_models.clear()
 
 app = FastAPI(
     title="Hospital Readmission Prediction API",
@@ -89,8 +89,8 @@ def predict(patient: PatientRecord):
         df = _prepare_patient_data(patient)
         
         # Preprocess and predict
-        X_processed = ml_models["preprocessor"].transform(df)
-        risk_prob = float(ml_models["model"].predict_proba(X_processed)[0, 1])
+        X_processed = app.ml_models["preprocessor"].transform(df)
+        risk_prob = float(app.ml_models["model"].predict_proba(X_processed)[0, 1])
         
         # Determine risk tier
         if risk_prob >= 0.6:
@@ -113,14 +113,14 @@ def predict(patient: PatientRecord):
 def explain(patient: PatientRecord):
     try:
         df = _prepare_patient_data(patient)
-        X_processed = ml_models["preprocessor"].transform(df)
+        X_processed = app.ml_models["preprocessor"].transform(df)
         
-        risk_prob = float(ml_models["model"].predict_proba(X_processed)[0, 1])
+        risk_prob = float(app.ml_models["model"].predict_proba(X_processed)[0, 1])
         
         # Get SHAP values for this single patient
         # (shap_values shape: [1, num_features])
-        shap_values = ml_models["explainer"].shap_values(X_processed)[0]
-        feature_names = ml_models["preprocessor"].get_feature_names_out()
+        shap_values = app.ml_models["explainer"].shap_values(X_processed)[0]
+        feature_names = app.ml_models["preprocessor"].get_feature_names_out()
         
         # Pair features with their SHAP impact, sort by magnitude
         impacts = {name: float(val) for name, val in zip(feature_names, shap_values)}
