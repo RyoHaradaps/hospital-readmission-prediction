@@ -28,8 +28,6 @@ async def lifespan(app: FastAPI):
         ml_models["explainer"] = shap.TreeExplainer(ml_models["model"])
         print("Models loaded successfully.")
     except Exception as e:
-        # We catch the error so the app starts even if models aren't built yet.
-        # In production, this should log a critical alert.
         print(f"Warning: Could not load models. API will start but predictions will fail. Error: {e}")
     yield
     ml_models.clear()
@@ -40,7 +38,7 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Allow cross-origin requests (so your future React/Streamlit frontend can talk to it)
+# Allow cross-origin requests (so the future React/Streamlit frontend can talk to it)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -128,7 +126,7 @@ def explain(patient: PatientRecord):
         # Filter to only top 5 most impactful features
         top_impacts = dict(sorted(impacts.items(), key=lambda x: abs(x[1]), reverse=True)[:5])
         
-                # Split factors into risk-increasing and risk-decreasing
+        # Split factors into risk-increasing and risk-decreasing
         risk_increasers = [k.replace("_", " ") for k, v in top_impacts.items() if v > 0]
         risk_decreasers = [k.replace("_", " ") for k, v in top_impacts.items() if v < 0]
 
